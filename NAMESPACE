@@ -3,5 +3,7 @@
 export("%!in%")
 export(compare_sets)
 export(get_levels)
+export(make_stars)
 export(selfname)
 importFrom(stats,setNames)
+importFrom(stats,symnum)
