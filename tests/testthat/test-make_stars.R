@@ -16,4 +16,23 @@ test_that("make_stars works", {
 
     expect_equal(max(sapply(custom_stars, nchar), na.rm = T), 5L)
     expect_equal(which.max(sapply(custom_stars, nchar)), 1L, ignore_attr = TRUE)
+
+    # fail if p>1
+    expect_error(make_stars(42))
+    # fail if p<0
+    expect_error(make_stars(-0.01))
+    # fail if cuts not ascending.
+    expect_error(make_stars(p,
+                            cuts = rev(custom_cuts),
+                            symbols = custom_symbols))
+    # fail if cuts has duplicates:
+    custom_cuts[2] <- custom_cuts[1]
+    expect_error(make_stars(p,
+                            cuts = custom_cuts,
+                            symbols = custom_symbols))
+    # fail if cuts has NA:
+    custom_cuts[2] <- NA
+    expect_error(make_stars(p,
+                            cuts = custom_cuts,
+                            symbols = custom_symbols))
 })
