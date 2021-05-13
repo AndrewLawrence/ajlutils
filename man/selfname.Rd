@@ -31,7 +31,7 @@ Use the elements of an object as their own names. This code extends
 {
     x <- 1:3
     y <- letters[1:3]
-    xn <- setNames(x,y)
+    xn <- stats::setNames(x,y)
 
     selfname(x)
 

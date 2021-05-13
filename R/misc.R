@@ -81,12 +81,10 @@ compare_sets <- function(x, y, list=FALSE) {
 #'
 #' @return a named object x
 #'
-#' @importFrom stats setNames
-#'
 #' @examples{
 #'     x <- 1:3
 #'     y <- letters[1:3]
-#'     xn <- setNames(x,y)
+#'     xn <- stats::setNames(x,y)
 #'
 #'     selfname(x)
 #'
@@ -125,7 +123,7 @@ selfname <- function(x,
   if (!identical(suffix, "")) {
     nm <- paste(nm, suffix, sep = sep)
   }
-  setNames(x, nm)
+  stats::setNames(x, nm)
 }
 
 #' get_levels
@@ -198,7 +196,6 @@ get_levels <- function(x,
 #' @param check boolean - should pvals be checked for range?
 #'
 #' @seealso stats::symnum
-#' @importFrom stats symnum
 #' @examples {
 #'   make_stars(10^c(seq(from = -7, to = 0, by = 0.25)))
 #'   # try a custom scheme where you get increasing stars the more zeros you have
