@@ -3,5 +3,6 @@
 export("%!in%")
 export(compare_sets)
 export(get_levels)
+export(lmelist_pooled_rsquaredglmm)
 export(make_stars)
 export(selfname)

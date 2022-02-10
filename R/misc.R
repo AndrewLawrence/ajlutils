@@ -198,10 +198,11 @@ get_levels <- function(x,
 #' @seealso stats::symnum
 #' @examples {
 #'   make_stars(10^c(seq(from = -7, to = 0, by = 0.25)))
-#'   # try a custom scheme where you get increasing stars the more zeros you have
-#'   #      (with a single "*" for 0.01 < p <= 0.05)
+#'   # try a custom scheme where you get increasing stars the more zeros
+#'   #      you have (with a single "*" for 0.01 < p <= 0.05)
 #'   custom_cuts <- 10^c(seq(from = -10, to = -2, by = 1), log10(0.05))
-#'   custom_symbols <- sapply(10:1, function(x) paste0(rep("*", x), collapse = ""))
+#'   custom_symbols <- sapply(10:1,
+#'                            function(x) paste0(rep("*", x), collapse = ""))
 #'   make_stars(10^c(seq(from = -7, to = 0, by = 0.25)),
 #'              cuts = custom_cuts, symbols = custom_symbols)
 #' }
