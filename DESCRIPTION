@@ -13,7 +13,7 @@ Suggests:
     spelling,
     testthat (>= 3.0.0)
 Language: en-GB
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 Config/testthat/edition: 3
 Imports: 
     MuMIn,
