@@ -28,7 +28,7 @@
 #'     or a list containing both the set sizes and lists of elements
 #'
 #' @export
-compare_sets <- function(x, y, list=FALSE) {
+compare_sets <- function(x, y, list = FALSE) {
   x <- unique(as.vector(x))
   y <- unique(as.vector(y))
 
@@ -215,7 +215,7 @@ make_stars <- function(pvals,
                        check = TRUE) {
 
   pvals <- as.numeric(pvals)
-  if (check && any(pvals > 1, na.rm = T) || any(pvals < 0, na.rm = T)) {
+  if (check && any(pvals > 1, na.rm = TRUE) || any(pvals < 0, na.rm = TRUE)) {
     stop("input must be p-values, between 0 and 1 inclusive")
   }
 

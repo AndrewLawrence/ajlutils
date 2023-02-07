@@ -14,7 +14,7 @@ test_that("make_stars works", {
 
     custom_stars <- make_stars(p, cuts = custom_cuts, symbols = custom_symbols)
 
-    expect_equal(max(sapply(custom_stars, nchar), na.rm = T), 5L)
+    expect_equal(max(sapply(custom_stars, nchar), na.rm = TRUE), 5L)
     expect_equal(which.max(sapply(custom_stars, nchar)), 1L, ignore_attr = TRUE)
 
     # fail if p>1
