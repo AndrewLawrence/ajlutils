@@ -10,10 +10,10 @@ as_hcluslabels(x)
 is_hcluslabels(x)
 }
 \arguments{
-\item{x}{input should be convertable to character matrix}
+\item{x}{input should be convertible to character matrix}
 }
 \description{
-Convert/test input standard format for cluster relabeling.
+Convert/test input standard format for cluster relabelling.
 }
 \section{Functions}{
 \itemize{

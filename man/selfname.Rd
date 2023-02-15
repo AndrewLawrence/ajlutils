@@ -24,7 +24,7 @@ a named object x
 }
 \description{
 Use the elements of an object as their own names. This code extends
-    \code{\link[stats]{setNames}}. Mostly useful for making iterables
+    \code{\link[stats]{setNames}}. Mostly useful for making iterable objects
     on the fly.
 }
 \examples{

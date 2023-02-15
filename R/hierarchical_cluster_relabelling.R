@@ -1,5 +1,3 @@
-# Rationale:
-
 
 new_hcluslabels <- function(x) {
   stopifnot(is.matrix(x))
@@ -12,9 +10,9 @@ new_hcluslabels <- function(x) {
 
 #' as_hcluslabels
 #'
-#' Convert/test input standard format for cluster relabeling.
+#' Convert/test input standard format for cluster relabelling.
 #'
-#' @param x input should be convertable to character matrix
+#' @param x input should be convertible to character matrix
 #' @export
 as_hcluslabels <- function(x) {
   UseMethod("as_hcluslabels")
@@ -81,7 +79,20 @@ validate_hcluslabels <- function(x) {
 }
 
 cluster_relabel <- function(labs2, labs1) {
-  # note: strictly labs2 must have more labels than labs1
+  # Internal function for pair of label vectors.
+  # note: strictly labs2 must have more label values than labs1
+  # note: need to deal with the case that label "L" in labs2
+  #       is not assigned to one of the extant labels in labs1
+  #       when labs1 also includes a label "L"
+  # e.g. if the cross tab resembles:
+  #            labs2
+  #     labs1    H    L    X
+  #         L 1.00 0.00 0.00
+  #         Z 0.00 0.25 0.75
+
+  if ( length(unique(labs2)) - length(unique(labs1)) != 1 ) {
+    stop("ERROR: labs2 must have exactly one more level than labs1")
+  }
 
   # joint tabulation:
   xt <- table(labs1, labs2)
@@ -93,22 +104,23 @@ cluster_relabel <- function(labs2, labs1) {
   max_idx <- apply(xt, 1, which.max) # index of max
   # turn this into a lookuptable:
   lut <- setNames(colnames(p_xt)[unname(max_idx)],
-                      rownames(p_xt))
+                  rownames(p_xt))
 
   # apply the lut:
-  newlabs <- names(lut)[match(colnames(p_xt), unname(lut))]
+  newlabs <- setNames(names(lut)[match(colnames(p_xt), unname(lut))],
+                      colnames(p_xt))
 
-  # fill in NA (keep new labels):
-  newlabs <- setNames(
-    ifelse(is.na(newlabs), colnames(p_xt), newlabs),
-    colnames(p_xt))
+  # rename with a label from labs2 that is not a label in labs1,
+  #   take the largest group of labs2 not in labs1
+  nlabs <- names(sort(colSums(xt), decreasing = TRUE))
+  nlab <- nlabs[! nlabs %in% names(lut)][1]
+
+  sel <- unname(which(is.na(newlabs)))
+
+  newlabs[sel] <- nlab
 
   # apply this to the data:
   return(unname(newlabs[match(labs2, names(newlabs))]))
-  return(list(p_xt = p_xt,
-              max_idx = max_idx,
-              lut = lut,
-              newlabs = newlabs))
 }
 
 
@@ -180,72 +192,3 @@ relabel_hcluslabels <- function(x) {
   }
   x
 }
-
-# HERE: bug in relabel_hcluslabels function:
-tmp <- structure(c("Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z",
-                   "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z",
-                   "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z",
-                   "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z",
-                   "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z",
-                   "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z",
-                   "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z",
-                   "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "Z", "S",
-                   "L", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "L",
-                   "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "L",
-                   "L", "L", "S", "S", "S", "S", "S", "L", "S", "S", "S", "S", "S",
-                   "S", "L", "L", "S", "S", "S", "S", "S", "L", "L", "L", "S", "S",
-                   "S", "L", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
-                   "S", "L", "S", "S", "S", "L", "S", "S", "S", "S", "S", "S", "S",
-                   "L", "S", "S", "L", "S", "L", "S", "L", "S", "S", "S", "S", "S",
-                   "L", "S", "S", "L", "S", "S", "S", "S", "X", "H", "X", "X", "X",
-                   "X", "L", "X", "X", "X", "X", "L", "L", "H", "X", "X", "L", "X",
-                   "X", "X", "L", "L", "X", "X", "X", "X", "H", "H", "H", "L", "X",
-                   "L", "L", "X", "H", "X", "X", "L", "X", "X", "X", "H", "H", "X",
-                   "X", "X", "L", "X", "H", "H", "H", "L", "X", "X", "H", "X", "L",
-                   "X", "L", "X", "L", "X", "X", "X", "X", "L", "X", "H", "X", "X",
-                   "X", "H", "X", "L", "L", "X", "X", "X", "L", "H", "X", "X", "H",
-                   "X", "H", "X", "H", "X", "L", "X", "X", "X", "H", "X", "X", "H",
-                   "X", "X", "X", "X", "D", "W", "D", "D", "D", "D", "H", "A", "D",
-                   "D", "D", "H", "H", "W", "D", "A", "H", "D", "D", "D", "H", "H",
-                   "A", "D", "D", "D", "W", "W", "W", "H", "A", "H", "H", "D", "W",
-                   "A", "D", "H", "D", "A", "D", "W", "W", "D", "D", "A", "H", "D",
-                   "W", "W", "W", "H", "A", "A", "W", "D", "H", "D", "H", "D", "H",
-                   "D", "D", "A", "A", "H", "D", "W", "D", "A", "D", "W", "D", "H",
-                   "H", "D", "D", "D", "H", "W", "A", "A", "W", "D", "W", "D", "W",
-                   "A", "H", "A", "A", "A", "W", "D", "D", "W", "D", "A", "A", "D",
-                   "L", "N", "L", "S", "L", "S", "E", "Z", "L", "L", "S", "E", "E",
-                   "N", "S", "Z", "E", "S", "S", "L", "E", "E", "Z", "L", "L", "S",
-                   "N", "N", "N", "E", "Z", "E", "E", "L", "N", "Z", "S", "E", "S",
-                   "Z", "S", "N", "N", "L", "L", "Z", "E", "S", "N", "N", "N", "E",
-                   "Z", "Z", "N", "L", "E", "S", "E", "S", "E", "L", "L", "Z", "Z",
-                   "E", "L", "N", "S", "Z", "L", "N", "S", "E", "E", "L", "L", "L",
-                   "E", "N", "Z", "Z", "N", "S", "N", "L", "N", "Z", "E", "Z", "Z",
-                   "Z", "N", "S", "S", "N", "S", "Z", "Z", "S"), dim = c(100L, 5L
-                   ))
-
-apply(relabel_hcluslabels(tmp), 2, table)
-# [[1]]
-#
-#   Z
-# 100
-#
-# [[2]]
-#
-#  L  Z
-# 20 80
-#
-# [[3]]
-#
-#  L  Z
-# 40 60
-#
-# [[4]]
-#
-#  A  L  W  Z
-# 20 20 20 40
-#
-# [[5]]
-#
-#  A  L  S  W  Z
-# 20 20 20 20 20
-#

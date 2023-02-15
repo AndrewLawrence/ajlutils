@@ -68,7 +68,7 @@ compare_sets <- function(x, y, list = FALSE) {
 #' selfname
 #'
 #' Use the elements of an object as their own names. This code extends
-#'     \code{\link[stats]{setNames}}. Mostly useful for making iterables
+#'     \code{\link[stats]{setNames}}. Mostly useful for making iterable objects
 #'     on the fly.
 #'
 #' @param x an object (vector, list) with elements coercible to character (and
