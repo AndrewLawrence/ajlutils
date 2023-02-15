@@ -180,15 +180,57 @@ cluster_relabel <- function(labs2, labs1) {
 #' @param x matrix of clustering labels organised with subjects as rows,
 #'        k-solutions as columns with increasing complexity solutions
 #'        from left to right.
+#' @return a matrix of class hcluslabels containing relabelled clusters from x
 #' @importFrom stats setNames
 #' @export
+#' @examples
+#' # Make some example data:
+#' mat <- cbind(rep(c("A"), times = c(30)),
+#'             rep(c("A","B"), times = c(10,20)),
+#'             rep(c("C","B","A"), times = c(10,10,10)))
+#' # Show that labels do not line up well:
+#' #   most labelled A at k=1 are labelled B at k=2:
+#' table(mat[,2], mat[,1], dnn = c("k=2", "k=1"))
+#' #   the k=3 labels are jumbled:
+#' table(mat[,3], mat[,2], dnn = c("k=3", "k=2"))
+#'
+#' # Apply the reordering:
+#' rmat <- relabel_hcluslabels(mat)
+#'
+#' # inspect the remapping of labels:
+#' attr(rmat, "mapping")
+#'
+#' # view the data:
+#' rmat
+#'
 relabel_hcluslabels <- function(x) {
   x <- as_hcluslabels(x)
+
+  x_orig <- x
 
   nk <- ncol(x)
 
   for ( i in seq(from = 2, to = nk) ) {
     x[, i] <- cluster_relabel(x[, i], x[, i - 1])
   }
-  x
+
+  mapping <- lapply(1:nk,
+                    function(k) {
+                      table(x[, k], x_orig[, k], dnn = c("new", "old"))
+                    })
+  names(mapping) <- colnames(x)
+
+  return(structure(x, mapping = mapping))
+}
+
+#' check_relabelling
+#'
+#' Given a hcluslabels matrix check whether the relabelling was successful.
+#'
+#' @param new a matrix of recoded labels, the result of relabel_hcluslabels(old)
+#' @param old a matrix of raw labels
+#' @return unchanged labels
+#' @export
+check_relabelling <- function(new, old) {
+  return(NULL)
 }

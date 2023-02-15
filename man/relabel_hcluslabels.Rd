@@ -11,6 +11,9 @@ relabel_hcluslabels(x)
 k-solutions as columns with increasing complexity solutions
 from left to right.}
 }
+\value{
+a matrix of class hcluslabels containing relabelled clusters from x
+}
 \description{
 Function to relabel hierarchical clustering results
 }
@@ -63,4 +66,25 @@ Clustering algorithms that accept a parameter k for the exact number of
 
  This function implements a simple greedy algorithm to relabel clusters in a
  cascading manner from left to right.
+}
+\examples{
+# Make some example data:
+mat <- cbind(rep(c("A"), times = c(30)),
+            rep(c("A","B"), times = c(10,20)),
+            rep(c("C","B","A"), times = c(10,10,10)))
+# Show that labels do not line up well:
+#   most labelled A at k=1 are labelled B at k=2:
+table(mat[,2], mat[,1], dnn = c("k=2", "k=1"))
+#   the k=3 labels are jumbled:
+table(mat[,3], mat[,2], dnn = c("k=3", "k=2"))
+
+# Apply the reordering:
+rmat <- relabel_hcluslabels(mat)
+
+# inspect the remapping of labels:
+attr(rmat, "mapping")
+
+# view the data:
+rmat
+
 }
