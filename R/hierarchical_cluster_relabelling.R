@@ -10,9 +10,12 @@ new_hcluslabels <- function(x) {
 
 #' as_hcluslabels
 #'
-#' Convert/test input standard format for cluster relabelling.
+#' Convert/test input to a standard format for cluster relabelling with
+#'     \code{\link{relabel_hcluslabels}}.
 #'
-#' @param x input should be convertible to character matrix
+#' @param x input should be convertible to character matrix such that
+#'     rows are labelled observations while columns contain hierarchical labels
+#'     of increasing complexity.
 #' @export
 as_hcluslabels <- function(x) {
   UseMethod("as_hcluslabels")
@@ -126,16 +129,20 @@ relabel_hcluster_pair <- function(labs2, labs1) {
 
 #'  relabel_hcluslabels
 #'
-#'  Function to relabel hierarchical clustering results
+#'  Function to relabel hierarchical clustering results. For
+#'      non-hierarchical cluster labels (i.e. k1 == k2) see
+#'      \code{\link{relabel_cluster_pair}}.
 #'
 #'  Clustering algorithms that accept a parameter k for the exact number of
 #'  clusters to estimate will naturally return a variable number of clusters
-#'  depending on the parameter value.
+#'  depending on that parameter value. Each increase in k produces a new label
+#'  and some subjects will be assigned to the new label.
 #'
-#'  Clusters labels are typically assigned arbitrarily by clustering algorithms
-#'  To illustrate, assigning 4 clusters to 10 patients in the following ways
-#'  is equivalent as we can map the labels A -> B, B -> C, C -> A, and D -> D to
-#'  obtain the same result:
+#'  In addition to this, cluster labels are (commonly) assigned arbitrarily
+#'  such that even when the exact same cluster structure is identified,
+#'  which cluster is labelled as "A" vs. "B" is arbitrary. To illustrate, the
+#'  following two clusterings of 10 patients into 4 clusters A,...,D is
+#'  equivalent:
 #'
 #'
 #'     A, A, A, B, C, C, C, C, D, D
@@ -143,15 +150,19 @@ relabel_hcluster_pair <- function(labs2, labs1) {
 #'
 #'     C, C, C, A, B, B, B, B, D, D
 #'
+#'  If we map the labels A -> B, B -> C, C -> A, and D -> D the two labellings
+#'  are identical.
+#'
 #'  Given this setting, when evaluating results for a clustering algorithm at
-#'  different values of k we don't want the labels to vary drastically
-#'  from (e.g.) k=2 to k=3 rather we want the cluster in k=3 which
-#'  most resembles cluster "A" in k=2 to be labelled "A" and not "B" or "C".
-#'  But this behaviour is not possible given only the input to the clustering
-#'  algorithm. Note: this is only useful if there is continuity between
+#'  different values of k we don't want the assignment of labels to vary
+#'  drastically from (e.g.) k=2 to k=3. Rather we want the cluster in k=3 which
+#'  most resembles cluster "A" in k=2 to be labelled "A" (and not "B" or "C").
+#'
+#'  Note: this assumes a degree of continuity between
 #'  clusterings at successive k values. It will not be useful if clusterings
-#'  are at random. In real data the two clusters found at k=2 rarely split
-#'  at random into the 3 clusters at k=3.
+#'  are at random. However in real data the two clusters found at k=2 rarely
+#'  split at random into the 3 clusters at k=3 and it is more typical to have
+#'  one of the k=2 labels split more into the new cluster.
 #'
 #'  To illustrate, in the scenario:
 #'
@@ -171,11 +182,17 @@ relabel_hcluster_pair <- function(labs2, labs1) {
 #'
 #'     2) The "B" class splits into two clusters "B" and "C"
 #'
-#'  Without the relabelling the analyst must recall that "B" in k=3 was labelled
-#'  "A" in the k=2 solution, which adds cognitive load to interpretation.
+#'  Without the relabelling the analyst needs to recall that "B" in k=3 was
+#'  labelled "A" in the k=2 solution, which adds cognitive load to
+#'  interpretation.
 #'
-#'  This function implements a simple greedy algorithm to relabel clusters in a
-#'  cascading manner from left to right.
+#'  This function implements a simple, greedy heuristic algorithm to relabel
+#'  clusters in a cascading manner from left to right.
+#'
+#'  Disclaimer: this is a computationally simple heuristic approach based on
+#'    matching of discrete labels. There are more complex/principled methods
+#'    available that could be adapted
+#'    e.g. \url{https://pubmed.ncbi.nlm.nih.gov/17485429/}
 #'
 #' @param x matrix of clustering labels organised with subjects as rows,
 #'        k-solutions as columns with increasing complexity solutions
@@ -266,4 +283,45 @@ check_relabelling <- function(new, old = NULL) {
     }
   }
   return(NULL)
+}
+
+
+#' relabel_cluster_pair
+#'
+#' Function creates a mapping from new -> old labels based on a greedy
+#'     heuristic (see \code{\link{relabel_hcluslabels}} which implements for
+#'     a hierarchical set of clusters.)
+#'
+#' @param old A vector of labels for subjects, values of old will be used to
+#'     relabel new.
+#' @param new A vector of labels for subjects to be matched to new.
+#' @return A copy of \code{new} with the matched labels from old.
+#' @examples
+#' relabel_cluster_pair(c("A", "B", "C"), c("x", "y", "z"))
+#' @export
+relabel_cluster_pair <- function(old, new) {
+
+  if ( length(old) != length(new) ) stop("input must be same length.")
+  if ( length(unique(old)) - length(unique(new)) != 0 ) {
+    stop("ERROR: old and new must have same number of levels")
+  }
+
+  # joint tabulation:
+  xt <- table(old, new)
+  # express as a proportion of old label:
+  p_xt <- prop.table(xt, margin = 1)
+
+  # for each row (i.e. old label), find the column with the
+  #   greatest proportion overlap:
+  max_idx <- apply(xt, 1, which.max) # index of max
+  # turn this into a lookuptable:
+  lut <- setNames(colnames(p_xt)[unname(max_idx)],
+                  rownames(p_xt))
+
+  # apply the lut:
+  newlabs <- setNames(names(lut)[match(colnames(p_xt), unname(lut))],
+                      colnames(p_xt))
+
+  # apply this to the data:
+  return(unname(newlabs[match(new, names(newlabs))]))
 }

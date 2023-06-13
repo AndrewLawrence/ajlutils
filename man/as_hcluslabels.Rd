@@ -10,10 +10,13 @@ as_hcluslabels(x)
 is_hcluslabels(x)
 }
 \arguments{
-\item{x}{input should be convertible to character matrix}
+\item{x}{input should be convertible to character matrix such that
+rows are labelled observations while columns contain hierarchical labels
+of increasing complexity.}
 }
 \description{
-Convert/test input standard format for cluster relabelling.
+Convert/test input to a standard format for cluster relabelling with
+    \code{\link{relabel_hcluslabels}}.
 }
 \section{Functions}{
 \itemize{

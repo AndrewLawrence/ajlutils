@@ -51,3 +51,18 @@ test_that("construction works", {
 test_that("relabelling works", {
   expect_null(check_relabelling(new = relabel_hcluslabels(dfdat), old = dfdat))
 })
+
+# non-hierarchical (k1==k2) example:
+set.seed(42)
+old <- rep(LETTERS[1:4], times = c(10, 20, 30, 40))
+new <- rep(letters[c(3, 2, 1, 4)], times = c(10, 20, 30, 40))
+# shuffle:
+new[sample(seq.int(length(new)), size = 20)] <-
+  new[sample(seq.int(length(new)), size = 20)]
+
+test_that("non-heirarchical relabelling works", {
+  # runs without error:
+  expect_no_error((res <- table(old, relabel_cluster_pair(old, new))))
+  # result is maximised along the diagonal:
+  expect_true(all(apply(res, 1, which.max) == 1:4))
+})
