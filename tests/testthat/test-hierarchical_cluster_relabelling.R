@@ -47,3 +47,7 @@ test_that("construction works", {
   expect_error(validate_hcluslabels(dat1))
 
 })
+
+test_that("relabelling works", {
+  expect_null(check_relabelling(new = relabel_hcluslabels(dfdat), old = dfdat))
+})

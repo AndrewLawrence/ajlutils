@@ -4,12 +4,12 @@
 \alias{check_relabelling}
 \title{check_relabelling}
 \usage{
-check_relabelling(new, old)
+check_relabelling(new, old = NULL)
 }
 \arguments{
 \item{new}{a matrix of recoded labels, the result of relabel_hcluslabels(old)}
 
-\item{old}{a matrix of raw labels}
+\item{old}{an optional matrix of raw labels}
 }
 \value{
 unchanged labels

@@ -78,7 +78,7 @@ validate_hcluslabels <- function(x) {
   x
 }
 
-cluster_relabel <- function(labs2, labs1) {
+relabel_hcluster_pair <- function(labs2, labs1) {
   # Internal function for pair of label vectors.
   # note: strictly labs2 must have more label values than labs1
   # note: need to deal with the case that label "L" in labs2
@@ -211,7 +211,7 @@ relabel_hcluslabels <- function(x) {
   nk <- ncol(x)
 
   for ( i in seq(from = 2, to = nk) ) {
-    x[, i] <- cluster_relabel(x[, i], x[, i - 1])
+    x[, i] <- relabel_hcluster_pair(x[, i], x[, i - 1])
   }
 
   mapping <- lapply(1:nk,
@@ -228,9 +228,42 @@ relabel_hcluslabels <- function(x) {
 #' Given a hcluslabels matrix check whether the relabelling was successful.
 #'
 #' @param new a matrix of recoded labels, the result of relabel_hcluslabels(old)
-#' @param old a matrix of raw labels
+#' @param old an optional matrix of raw labels
 #' @return unchanged labels
 #' @export
-check_relabelling <- function(new, old) {
+check_relabelling <- function(new, old = NULL) {
+
+  if ( ! "mapping" %in% names(attributes(new)) ) {
+    stop("new does not have the expected 'mapping' attribute.")
+  }
+
+  map <- attr(new, "mapping")
+  # Check that each mapping is unique.
+  #   a mapping is unique if there is one non-zero entry for every row and
+  #   every column.
+  map_chk <- lapply(map, function(x) x > 0)
+
+  chk_unique_mapping <- function(a) {
+    nc <- ncol(a)
+    nr <- nrow(a)
+    chk_r <- all.equal(as.vector(rowSums(a)),
+                       rep(1, nc))
+    chk_c <- all.equal(as.vector(colSums(a)),
+                       rep(1, nr))
+    !chk_r | !chk_c
+  }
+
+  lapply(map_chk,
+         function(x) {
+           if ( chk_unique_mapping(x) ) {
+             stop("mapping margins wrong")
+           }
+         } )
+
+  if ( !is.null(old) ) {
+    if ( !identical(dim(new), dim(old)) ) {
+      stop("Dimensions do not match")
+    }
+  }
   return(NULL)
 }
