@@ -51,16 +51,12 @@ as_hcluslabels.hcluslabels <- function(x) {
   validate_hcluslabels(x)
 }
 
-get_labels <- function(x) {
-  apply(x, 2, function(kk) sort(unique(kk)))
-}
-
 validate_hcluslabels <- function(x) {
 
   cls <- class(x)
 
   values <- unclass(x)
-  labels <- get_labels(values)
+  labels <- apply(values, 2, function(kk) sort(unique(kk)))
 
   label_lengths <- vapply(labels, FUN = length, FUN.VALUE = 1L)
 
@@ -69,7 +65,7 @@ validate_hcluslabels <- function(x) {
   }
 
   if ( ! "hcluslabels" %in% cls ) {
-    stop("Error: not a hcluslabels object. Try ")
+    stop("Error: not a hcluslabels object.")
   }
 
   if ( !all(diff(label_lengths) >= 1) ) {
@@ -81,57 +77,66 @@ validate_hcluslabels <- function(x) {
   x
 }
 
-relabel_hcluster_pair <- function(labs2, labs1) {
-  # Internal function for pair of label vectors.
-  # note: strictly labs2 must have more label values than labs1
-  # note: need to deal with the case that label "L" in labs2
-  #       is not assigned to one of the extant labels in labs1
-  #       when labs1 also includes a label "L"
-  # e.g. if the cross tab resembles:
-  #            labs2
-  #     labs1    H    L    X
-  #         L 1.00 0.00 0.00
-  #         Z 0.00 0.25 0.75
 
-  if ( length(unique(labs2)) - length(unique(labs1)) != 1 ) {
-    stop("ERROR: labs2 must have exactly one more level than labs1")
-  }
-
-  # joint tabulation:
-  xt <- table(labs1, labs2)
-  # express as a proportion:
-  p_xt <- prop.table(xt, margin = 1)
-
-  # for each row (i.e. previous label), find the column with the
-  #   greatest proportion overlap:
-  max_idx <- apply(xt, 1, which.max) # index of max
-  # turn this into a lookuptable:
-  lut <- setNames(colnames(p_xt)[unname(max_idx)],
-                  rownames(p_xt))
-
-  # apply the lut:
-  newlabs <- setNames(names(lut)[match(colnames(p_xt), unname(lut))],
-                      colnames(p_xt))
-
-  # rename with a label from labs2 that is not a label in labs1,
-  #   take the largest group of labs2 not in labs1
-  nlabs <- names(sort(colSums(xt), decreasing = TRUE))
-  nlab <- nlabs[! nlabs %in% names(lut)][1]
-
-  sel <- unname(which(is.na(newlabs)))
-
-  newlabs[sel] <- nlab
-
-  # apply this to the data:
-  return(unname(newlabs[match(labs2, names(newlabs))]))
+apply_lsap_labels <- function(x, lut) {
+  unname(lut[match(x, names(lut))])
 }
 
+#' lsap_relabel_pair
+#'
+#' Function creates and applies a mapping from new -> old labels using
+#'     a linear sum assignment solver (LSAP, see:
+#'     \code{\link[clue]{solve_LSAP}}).
+#'     For application to a set of hierarchical cluster labels see
+#'     \code{\link{relabel_hcluslabels}}.
+#'
+#' @param new A vector of labels for subjects, to be modified such that labels
+#'     in new are matched to best fitting labels in old.
+#' @param old A vector of labels for subjects, values of old will be used to
+#'     relabel new.
+#' @return A copy of \code{new} with the updated labels.
+#' @examples
+#' lsap_relabel_pair(c("A", "B", "C"), c("x", "y", "z"))
+#' @importFrom clue solve_LSAP
+#' @export
+lsap_relabel_pair <- function(new, old) {
+
+  new <- as.character(new)
+  old <- as.character(old)
+
+  tab <- table(old, new)
+
+  cn <- colnames(tab)
+  rn <- rownames(tab)
+
+  # solve_LSAP result is vector 1:nrow(tab) containing column matches:
+  res <- clue::solve_LSAP(tab, maximum = TRUE)
+  # extract matching colnames:
+  res <- setNames(rn[match(seq_along(cn), res)], cn)
+
+  # if no NA then we are working with k1==k2 and early return:
+  if ( !any(is.na(res)) ) {
+    return(apply_lsap_labels(new, res))
+  }
+  # otherwise we need to replace NA values with elements of cn not matched to
+  #   elements of rn:
+  possibles <- cn[cn %!in% rn]
+  # Check we have enough:
+  if ( length(possibles) < sum(is.na(res)) ) {
+    stop("not enough names.")
+  }
+  # Assign the non-matched labels arbitrarily:
+  res[is.na(res)] <- possibles[seq_along(res[is.na(res)])]
+  # return:
+  apply_lsap_labels(new, res)
+}
 
 #'  relabel_hcluslabels
 #'
-#'  Function to relabel hierarchical clustering results. For
-#'      non-hierarchical cluster labels (i.e. k1 == k2) see
-#'      \code{\link{relabel_cluster_pair}}.
+#'  Function to harmonise labels for clustering results on the same sample
+#'      with increasing number of partitions - termed hierarchical clustering.
+#'      For pairwise relabelling and non-hierarchical label matching
+#'      (i.e. k1 == k2), see \code{\link{lsap_relabel_pair}}.
 #'
 #'  Clustering algorithms that accept a parameter k for the exact number of
 #'  clusters to estimate will naturally return a variable number of clusters
@@ -186,17 +191,13 @@ relabel_hcluster_pair <- function(labs2, labs1) {
 #'  labelled "A" in the k=2 solution, which adds cognitive load to
 #'  interpretation.
 #'
-#'  This function implements a simple, greedy heuristic algorithm to relabel
-#'  clusters in a cascading manner from left to right.
-#'
-#'  Disclaimer: this is a computationally simple heuristic approach based on
-#'    matching of discrete labels. There are more complex/principled methods
-#'    available that could be adapted
-#'    e.g. \url{https://pubmed.ncbi.nlm.nih.gov/17485429/}
+#'  This function uses the \code{\link[clue]{solve_LSAP}} function from the
+#'      clue package. See Hornik 2005 J. Stat. Software
+#'      (\url{https://www.jstatsoft.org/article/view/v014i12})
 #'
 #' @param x matrix of clustering labels organised with subjects as rows,
-#'        k-solutions as columns with increasing complexity solutions
-#'        from left to right.
+#'        k-solutions as columns. Must be ordered with increasing complexity
+#'        of solutions from left to right.
 #' @return a matrix of class hcluslabels containing relabelled clusters from x
 #' @importFrom stats setNames
 #' @export
@@ -228,7 +229,7 @@ relabel_hcluslabels <- function(x) {
   nk <- ncol(x)
 
   for ( i in seq(from = 2, to = nk) ) {
-    x[, i] <- relabel_hcluster_pair(x[, i], x[, i - 1])
+    x[, i] <- lsap_relabel_pair(x[, i], x[, i - 1])
   }
 
   mapping <- lapply(1:nk,
@@ -282,46 +283,5 @@ check_relabelling <- function(new, old = NULL) {
       stop("Dimensions do not match")
     }
   }
-  return(NULL)
-}
-
-
-#' relabel_cluster_pair
-#'
-#' Function creates a mapping from new -> old labels based on a greedy
-#'     heuristic (see \code{\link{relabel_hcluslabels}} which implements for
-#'     a hierarchical set of clusters.)
-#'
-#' @param old A vector of labels for subjects, values of old will be used to
-#'     relabel new.
-#' @param new A vector of labels for subjects to be matched to new.
-#' @return A copy of \code{new} with the matched labels from old.
-#' @examples
-#' relabel_cluster_pair(c("A", "B", "C"), c("x", "y", "z"))
-#' @export
-relabel_cluster_pair <- function(old, new) {
-
-  if ( length(old) != length(new) ) stop("input must be same length.")
-  if ( length(unique(old)) - length(unique(new)) != 0 ) {
-    stop("ERROR: old and new must have same number of levels")
-  }
-
-  # joint tabulation:
-  xt <- table(old, new)
-  # express as a proportion of old label:
-  p_xt <- prop.table(xt, margin = 1)
-
-  # for each row (i.e. old label), find the column with the
-  #   greatest proportion overlap:
-  max_idx <- apply(xt, 1, which.max) # index of max
-  # turn this into a lookuptable:
-  lut <- setNames(colnames(p_xt)[unname(max_idx)],
-                  rownames(p_xt))
-
-  # apply the lut:
-  newlabs <- setNames(names(lut)[match(colnames(p_xt), unname(lut))],
-                      colnames(p_xt))
-
-  # apply this to the data:
-  return(unname(newlabs[match(new, names(newlabs))]))
+  return(new)
 }

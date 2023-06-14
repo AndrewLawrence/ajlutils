@@ -8,16 +8,17 @@ relabel_hcluslabels(x)
 }
 \arguments{
 \item{x}{matrix of clustering labels organised with subjects as rows,
-k-solutions as columns with increasing complexity solutions
-from left to right.}
+k-solutions as columns. Must be ordered with increasing complexity
+of solutions from left to right.}
 }
 \value{
 a matrix of class hcluslabels containing relabelled clusters from x
 }
 \description{
-Function to relabel hierarchical clustering results. For
-     non-hierarchical cluster labels (i.e. k1 == k2) see
-     \code{\link{relabel_cluster_pair}}.
+Function to harmonise labels for clustering results on the same sample
+     with increasing number of partitions - termed hierarchical clustering.
+     For pairwise relabelling and non-hierarchical label matching
+     (i.e. k1 == k2), see \code{\link{lsap_relabel_pair}}.
 }
 \details{
 Clustering algorithms that accept a parameter k for the exact number of
@@ -73,13 +74,9 @@ Clustering algorithms that accept a parameter k for the exact number of
  labelled "A" in the k=2 solution, which adds cognitive load to
  interpretation.
 
- This function implements a simple, greedy heuristic algorithm to relabel
- clusters in a cascading manner from left to right.
-
- Disclaimer: this is a computationally simple heuristic approach based on
-   matching of discrete labels. There are more complex/principled methods
-   available that could be adapted
-   e.g. \url{https://pubmed.ncbi.nlm.nih.gov/17485429/}
+ This function uses the \code{\link[clue]{solve_LSAP}} function from the
+     clue package. See Hornik 2005 J. Stat. Software
+     (\url{https://www.jstatsoft.org/article/view/v014i12})
 }
 \examples{
 # Make some example data:

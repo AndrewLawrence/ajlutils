@@ -49,7 +49,9 @@ test_that("construction works", {
 })
 
 test_that("relabelling works", {
-  expect_null(check_relabelling(new = relabel_hcluslabels(dfdat), old = dfdat))
+  expect_equal(
+    check_relabelling(new = relabel_hcluslabels(dfdat), old = dfdat),
+    relabel_hcluslabels(dfdat))
 })
 
 # non-hierarchical (k1==k2) example:
@@ -62,7 +64,7 @@ new[sample(seq.int(length(new)), size = 20)] <-
 
 test_that("non-heirarchical relabelling works", {
   # runs without error:
-  expect_no_error((res <- table(old, relabel_cluster_pair(old, new))))
+  expect_no_error((res <- table(old, lsap_relabel_pair(new = new, old = old))))
   # result is maximised along the diagonal:
   expect_true(all(apply(res, 1, which.max) == 1:4))
 })
