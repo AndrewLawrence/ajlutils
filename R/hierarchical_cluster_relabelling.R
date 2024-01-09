@@ -23,13 +23,12 @@ as_hcluslabels <- function(x) {
 
 #' @describeIn as_hcluslabels Check if object is in a valid hcluslabels format
 is_hcluslabels <- function(x) {
-  tryCatch( {
+  tryCatch({
     as_hcluslabels(x)
     TRUE
-    },
-    error = function(e) FALSE)
+  },
+  error = function(e) FALSE)
 }
-
 
 #' @export
 as_hcluslabels.default <- function(x) {

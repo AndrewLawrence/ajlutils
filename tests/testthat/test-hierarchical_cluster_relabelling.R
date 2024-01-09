@@ -51,7 +51,8 @@ test_that("construction works", {
 test_that("relabelling works", {
   expect_equal(
     check_relabelling(new = relabel_hcluslabels(dfdat), old = dfdat),
-    relabel_hcluslabels(dfdat))
+    relabel_hcluslabels(dfdat)
+  )
 })
 
 # non-hierarchical (k1==k2) example:
