@@ -232,3 +232,52 @@ make_stars <- function(pvals,
                         cutpoints = cuts,
                         symbols = c(symbols, nonsymbol), legend = FALSE))
 }
+
+#' write_table_unix
+#'
+#' Wrapper to write in binary mode
+#'     with defaults tailored for producing a file which can be read directly
+#'     by a shell script on a unix system. This is a relatively common task
+#'     and this approach avoids the need for invoking \code{dos2unix}.
+#'
+#'    The file is opened in write-only binary mode ('wb') and
+#'    \code{\link[utils]{write.table}} is invoked with the following
+#'     key (modifiable) defaults:
+#'     \itemize{
+#'      \item unix line endings (`\\n`)
+#'      \item no quotes
+#'      \item tab separated
+#'      \item no rownames or colnames
+#'     }
+#' @param ... further arguments passed to \code{\link[utils]{write.table}}
+#' @importFrom utils write.table
+#' @inheritParams utils::write.table
+#' @examples
+#' \dontrun{
+#'   x <- c("apple", "table", "penny")
+#'   y <- 1:3
+#'   write_table_unix(data.frame(x,y), file = "test.tsv")
+#' }
+#'
+#'
+#'
+#' @export
+write_table_unix <- function(x,
+                             file,
+                             quote = FALSE,
+                             col.names = FALSE, #nolint
+                             row.names = FALSE, #nolint
+                             eol = "\n",
+                             sep = "\t",
+                             ...) {
+  f <- file(file, open = "wb")
+  write.table(x,
+              file = f,
+              quote = quote,
+              col.names = col.names,
+              row.names = row.names,
+              eol = eol,
+              sep = sep,
+              ...)
+  close(f)
+}
