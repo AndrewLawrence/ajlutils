@@ -21,14 +21,15 @@
 #'
 #' @param x a vector of elements to compare with y
 #' @param y a vector of elements to compare with x
-#' @param list boolean should matching and non-matching elements be returned?
+#' @param value boolean should matching and non-matching elements be returned?
 #'     Or just a count?
 #'
 #' @return a list of set sizes,
-#'     or a list containing both the set sizes and lists of elements
+#'     or a list containing both the set sizes and values of elements
+#'     in each set
 #'
 #' @export
-compare_sets <- function(x, y, list = FALSE) {
+compare_sets <- function(x, y, value = FALSE) {
   x <- unique(as.vector(x))
   y <- unique(as.vector(y))
 
@@ -45,7 +46,7 @@ compare_sets <- function(x, y, list = FALSE) {
   names(tab) <- c(
     "x", "y", "intersection", "only_x", "only_y"
   )
-  if (list) {
+  if (value) {
     dat <- list(
       x[x %in% y],
       x[x %!in% y],
@@ -58,7 +59,7 @@ compare_sets <- function(x, y, list = FALSE) {
       "only_y"
     )
     return(list(table = tab,
-                data = dat))
+                values = dat))
   } else {
     return(tab)
   }
@@ -280,4 +281,31 @@ write_table_unix <- function(x,
               sep = sep,
               ...)
   close(f)
+}
+
+
+#' glance_df
+#'
+#' A single row summary "glance" of a data.frame
+#'
+#' This function has been "rescued" from \code{\link[broom]{broom}} where
+#'     the glance tidier for data.frames is being deprecated.
+#'
+#' @param x A data.frame
+#' @param ... Additional arguments for other methods.
+#' @return A single row summary "glance" of the data.frame.
+#'     A tibble reporting nrow, ncol, complete rows and missing fraction.
+#' @examples
+#' # example code
+#' glance_df(mtcars)
+#' @importFrom tibble tibble
+#' @export
+glance_df <- function(x, ...) {
+  x <- as.data.frame(x)
+
+  ret <- tibble::tibble(nrow = nrow(x), ncol = ncol(x))
+  ret$complete.obs <- sum(stats::complete.cases(x))
+  ret$na.fraction <- mean(is.na(x))
+
+  return(ret)
 }

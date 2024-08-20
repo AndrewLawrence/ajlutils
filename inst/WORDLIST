@@ -4,6 +4,7 @@ LSAP
 MuMIn
 R's
 Stat
+df
 forcats
 github
 hcluslabels
@@ -11,8 +12,11 @@ iterable
 lm
 lmeList
 lsap
+ncol
+nrow
 pvals
 selfname
 squaredGLMM
 symnum
+tibble
 wb

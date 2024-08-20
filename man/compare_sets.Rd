@@ -4,19 +4,20 @@
 \alias{compare_sets}
 \title{Compare two sets}
 \usage{
-compare_sets(x, y, list = FALSE)
+compare_sets(x, y, value = FALSE)
 }
 \arguments{
 \item{x}{a vector of elements to compare with y}
 
 \item{y}{a vector of elements to compare with x}
 
-\item{list}{boolean should matching and non-matching elements be returned?
+\item{value}{boolean should matching and non-matching elements be returned?
 Or just a count?}
 }
 \value{
 a list of set sizes,
-    or a list containing both the set sizes and lists of elements
+    or a list containing both the set sizes and values of elements
+    in each set
 }
 \description{
 Will convert input to sets of unique elements.

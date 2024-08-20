@@ -1,7 +1,7 @@
 Package: ajlutils
 Type: Package
 Title: A miscellaneous utilities package
-Version: 0.2.1
+Version: 0.3.0
 Author: Andrew J. Lawrence
 Maintainer: Andrew J. Lawrence <lawrenceajl@gmail.com>
 Description: A miscellany of functions I have found a repeated use for in 
@@ -13,10 +13,11 @@ Suggests:
     spelling,
     testthat (>= 3.0.0)
 Language: en-GB
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Config/testthat/edition: 3
 Imports: 
     clue,
     MuMIn,
     psych,
-    stats
+    stats,
+    tibble
